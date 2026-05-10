@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bookmark, Check, Copy, Layers } from "lucide-react";
+import { Bookmark, Check, Columns3, Copy, Layers } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import type { Engine, PromptCard as PromptCardType } from "@/lib/types";
 import { toast } from "sonner";
 import { useFavorites } from "@/components/favorites/favorites-context";
+import { useCompare } from "@/components/compare/compare-context";
 
 interface Props {
   card: PromptCardType;
@@ -18,6 +19,8 @@ interface Props {
   conceptKo: string;
   /** When true, hides the copy/bookmark footer (compact view). Default false. */
   compact?: boolean;
+  /** When true, shows the compare toggle in the header. Default false. */
+  comparable?: boolean;
 }
 
 async function copyToClipboard(text: string): Promise<boolean> {
@@ -40,10 +43,19 @@ async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-export function PromptCard({ card, index, engine, conceptKo, compact }: Props) {
+export function PromptCard({
+  card,
+  index,
+  engine,
+  conceptKo,
+  compact,
+  comparable,
+}: Props) {
   const [copied, setCopied] = useState<"only" | "full" | null>(null);
   const { isFavorited, toggleFavorite } = useFavorites();
+  const { isSelected, toggle: toggleCompare } = useCompare();
   const favorited = isFavorited(card.id);
+  const compareSelected = isSelected(card.id);
 
   async function handleCopy(which: "only" | "full") {
     const text = which === "only" ? card.promptOnly : card.promptFull;
@@ -61,6 +73,10 @@ export function PromptCard({ card, index, engine, conceptKo, compact }: Props) {
     toggleFavorite({ card, conceptKo, engine });
   }
 
+  function handleToggleCompare() {
+    toggleCompare({ card, engine, conceptKo, index: index + 1 });
+  }
+
   const delayClass = ["delay-card-0", "delay-card-1", "delay-card-2", "delay-card-3", "delay-card-4"][
     Math.min(index, 4)
   ];
@@ -73,8 +89,18 @@ export function PromptCard({ card, index, engine, conceptKo, compact }: Props) {
         delayClass
       )}
     >
-      <div className="border-b border-border bg-muted/40 px-5 py-3.5 relative">
-        <div className="flex items-start gap-2 mb-1.5 pr-9">
+      <div
+        className={cn(
+          "border-b border-border bg-muted/40 px-5 py-3.5 relative transition-colors",
+          compareSelected && "bg-primary/5"
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-start gap-2 mb-1.5",
+            comparable ? "pr-[68px]" : "pr-9"
+          )}
+        >
           <Badge variant="outline" className="border-foreground/15">
             <Layers className="h-3 w-3" strokeWidth={2} />
             {String(index + 1).padStart(2, "0")}
@@ -83,29 +109,57 @@ export function PromptCard({ card, index, engine, conceptKo, compact }: Props) {
             {card.styleLabel}
           </span>
         </div>
-        <p className="text-xs text-muted-foreground leading-relaxed pr-9">
+        <p
+          className={cn(
+            "text-xs text-muted-foreground leading-relaxed",
+            comparable ? "pr-[68px]" : "pr-9"
+          )}
+        >
           <span className="font-medium text-foreground">{card.styleLabelKo}</span>
           {card.intentKo && <span className="block mt-1">{card.intentKo}</span>}
         </p>
 
-        <button
-          type="button"
-          onClick={handleToggleFavorite}
-          aria-pressed={favorited}
-          aria-label={favorited ? "즐겨찾기 해제" : "즐겨찾기에 저장"}
-          className={cn(
-            "absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md transition-all duration-200",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            favorited
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
-              : "text-muted-foreground hover:bg-background hover:text-foreground"
+        <div className="absolute right-3 top-3 flex items-center gap-1">
+          {comparable && (
+            <button
+              type="button"
+              onClick={handleToggleCompare}
+              aria-pressed={compareSelected}
+              aria-label={compareSelected ? "비교에서 제외" : "비교 카드로 선택"}
+              title={compareSelected ? "비교에서 제외" : "비교에 추가"}
+              className={cn(
+                "inline-flex h-8 w-8 items-center justify-center rounded-md transition-all duration-200",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                compareSelected
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "text-muted-foreground hover:bg-background hover:text-foreground"
+              )}
+            >
+              <Columns3
+                className="h-4 w-4"
+                strokeWidth={compareSelected ? 2.25 : 2}
+              />
+            </button>
           )}
-        >
-          <Bookmark
-            className={cn("h-4 w-4", favorited && "fill-current")}
-            strokeWidth={favorited ? 2.25 : 2}
-          />
-        </button>
+          <button
+            type="button"
+            onClick={handleToggleFavorite}
+            aria-pressed={favorited}
+            aria-label={favorited ? "즐겨찾기 해제" : "즐겨찾기에 저장"}
+            className={cn(
+              "inline-flex h-8 w-8 items-center justify-center rounded-md transition-all duration-200",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              favorited
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "text-muted-foreground hover:bg-background hover:text-foreground"
+            )}
+          >
+            <Bookmark
+              className={cn("h-4 w-4", favorited && "fill-current")}
+              strokeWidth={favorited ? 2.25 : 2}
+            />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col gap-3 p-5">

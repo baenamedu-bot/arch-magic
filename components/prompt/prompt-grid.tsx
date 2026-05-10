@@ -85,6 +85,7 @@ export function PromptGrid({ loading, error, cards, engine, conceptKo, onRetry }
           index={i}
           engine={engine}
           conceptKo={conceptKo}
+          comparable
         />
       ))}
     </div>

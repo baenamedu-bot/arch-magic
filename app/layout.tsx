@@ -4,6 +4,8 @@ import "./globals.css";
 
 import { ApiKeyProvider } from "@/components/settings/api-key-context";
 import { FavoritesProvider } from "@/components/favorites/favorites-context";
+import { CompareProvider } from "@/components/compare/compare-context";
+import { ComparisonPanel } from "@/components/compare/comparison-panel";
 import { AppHeader } from "@/components/app-header";
 import { FooterCredit } from "@/components/branding/footer-credit";
 import { WelcomeModal } from "@/components/branding/welcome-modal";
@@ -51,21 +53,24 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground antialiased flex flex-col">
         <ApiKeyProvider>
           <FavoritesProvider>
-            <AppHeader />
-            <main className="flex-1">{children}</main>
-            <FooterCredit />
-            <WelcomeModal />
-            <Toaster
-              position="top-center"
-              richColors
-              closeButton
-              toastOptions={{
-                style: {
-                  fontFamily:
-                    "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                },
-              }}
-            />
+            <CompareProvider>
+              <AppHeader />
+              <main className="flex-1">{children}</main>
+              <FooterCredit />
+              <WelcomeModal />
+              <ComparisonPanel />
+              <Toaster
+                position="top-center"
+                richColors
+                closeButton
+                toastOptions={{
+                  style: {
+                    fontFamily:
+                      "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                  },
+                }}
+              />
+            </CompareProvider>
           </FavoritesProvider>
         </ApiKeyProvider>
       </body>

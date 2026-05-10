@@ -7,7 +7,9 @@ import { toast } from "sonner";
 import { ConceptForm } from "@/components/prompt/concept-form";
 import { PromptGrid } from "@/components/prompt/prompt-grid";
 import { Disclaimer } from "@/components/prompt/disclaimer";
+import { ComparisonHint } from "@/components/compare/comparison-panel";
 import { useApiKeyModal } from "@/components/settings/api-key-context";
+import { useCompare } from "@/components/compare/compare-context";
 import { Badge } from "@/components/ui/badge";
 import { hasApiKey, getApiKey } from "@/lib/api-key-storage";
 import {
@@ -27,6 +29,7 @@ import { loadModifiers, saveModifiers } from "@/lib/modifier-storage";
 
 export default function HomePage() {
   const { openApiKeyModal, apiKeyVersion } = useApiKeyModal();
+  const { clear: clearCompare } = useCompare();
 
   const [concept, setConcept] = useState("");
   const [engine, setEngine] = useState<Engine>("midjourney");
@@ -72,6 +75,7 @@ export default function HomePage() {
     setLoading(true);
     setCards([]);
     setHasResult(true);
+    clearCompare();
     try {
       const result = await generatePromptCards({
         apiKey,
@@ -179,6 +183,7 @@ export default function HomePage() {
             conceptKo={concept.trim()}
             onRetry={handleGenerate}
           />
+          {cards.length > 0 && <ComparisonHint />}
           {(cards.length > 0 || (!loading && !error && hasResult)) && <Disclaimer />}
         </section>
       )}

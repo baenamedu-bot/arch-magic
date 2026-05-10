@@ -37,7 +37,13 @@ HARD RULES:
    - 제주 돌담 → Jeju basalt stone wall (dol-dam), volcanic basalt masonry
    - 한옥 처마 → traditional hanok eaves with curved gable
 5. intentKo: 1~2 short Korean sentences explaining WHY this mood was chosen and what client impression it targets. Use professional architecture vocabulary (매스, 입면, 파사드, 텍토닉, 보이드 등) — not generic words.
-6. Never include disallowed Midjourney content. Never describe real living people. Never include camera operator names.
+6. elements: short Korean one-liners (each ≤ 30 characters, NO trailing punctuation) summarising the four required elements as they appear in this card's promptOnly. These power the side-by-side comparison panel. Examples:
+   - materiality: "황동 디테일 + 노출 콘크리트"
+   - spatial: "6m 보이드 + 캔틸레버 발코니"
+   - lighting: "저녁 황금시간 라킹 라이트"
+   - camera: "35mm 프라임, 인물 시점"
+   Use Korean architecture vocabulary, no English. Each must be a concise summary of what's in promptOnly, NOT a translation of the entire promptOnly.
+7. Never include disallowed Midjourney content. Never describe real living people. Never include camera operator names.
 
 OUTPUT: pure JSON only, no prose, no markdown fences. Strictly follow this schema:
 {
@@ -46,6 +52,12 @@ OUTPUT: pure JSON only, no prose, no markdown fences. Strictly follow this schem
       "styleLabel": "<English style name from the library>",
       "styleLabelKo": "<Korean style name from the library>",
       "intentKo": "<1-2 Korean sentences>",
+      "elements": {
+        "materiality": "<Korean one-liner ≤ 30 chars>",
+        "spatial": "<Korean one-liner ≤ 30 chars>",
+        "lighting": "<Korean one-liner ≤ 30 chars>",
+        "camera": "<Korean one-liner ≤ 30 chars>"
+      },
       "promptOnly": "<English prompt body — 4 elements naturally woven in>",
       "parameters": "<engine-specific parameters string OR empty>",
       "negative": "<SD-only negative prompt OR empty>"
@@ -66,6 +78,13 @@ function engineDirective(engine: Engine): string {
 - negative: a comma-separated negative prompt. Always include common quality negatives ("blurry, low quality, low resolution, jpeg artifacts, oversaturated, cartoon, illustration, distorted geometry, warped perspective, extra windows, broken symmetry, watermark, text, logo, signature").`;
 }
 
+interface RawCardElements {
+  materiality?: unknown;
+  spatial?: unknown;
+  lighting?: unknown;
+  camera?: unknown;
+}
+
 interface RawCard {
   styleLabel?: unknown;
   styleLabelKo?: unknown;
@@ -73,10 +92,26 @@ interface RawCard {
   promptOnly?: unknown;
   parameters?: unknown;
   negative?: unknown;
+  elements?: unknown;
 }
 
 function asString(v: unknown, fallback = ""): string {
   return typeof v === "string" ? v.trim() : fallback;
+}
+
+function asElements(v: unknown): import("./types").CardElements | undefined {
+  if (!v || typeof v !== "object") return undefined;
+  const r = v as RawCardElements;
+  const result: import("./types").CardElements = {};
+  const m = asString(r.materiality);
+  const s = asString(r.spatial);
+  const l = asString(r.lighting);
+  const c = asString(r.camera);
+  if (m) result.materiality = m;
+  if (s) result.spatial = s;
+  if (l) result.lighting = l;
+  if (c) result.camera = c;
+  return Object.keys(result).length > 0 ? result : undefined;
 }
 
 function buildFullPrompt(engine: Engine, c: { promptOnly: string; parameters: string; negative: string }): string {
@@ -227,6 +262,7 @@ export async function generatePromptCards(opts: GenerateOptions): Promise<Prompt
     const intentKo = asString(raw.intentKo);
 
     const built = buildFullPrompt(engine, { promptOnly, parameters, negative });
+    const elements = asElements(raw.elements);
 
     cards.push({
       id: `card_${Date.now()}_${cards.length}`,
@@ -237,6 +273,7 @@ export async function generatePromptCards(opts: GenerateOptions): Promise<Prompt
       promptFull: built,
       parameters: parameters || undefined,
       negative: negative || undefined,
+      elements,
     });
   }
 
