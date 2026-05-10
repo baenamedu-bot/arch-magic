@@ -18,12 +18,21 @@ import {
 import { generatePromptCards, GeminiError } from "@/lib/gemini-client";
 import type { Engine, PromptCard } from "@/lib/types";
 import { ENGINE_LABEL } from "@/lib/types";
+import {
+  emptyModifierSelection,
+  countSelected,
+  type ModifierSelection,
+} from "@/lib/modifier-options";
+import { loadModifiers, saveModifiers } from "@/lib/modifier-storage";
 
 export default function HomePage() {
   const { openApiKeyModal, apiKeyVersion } = useApiKeyModal();
 
   const [concept, setConcept] = useState("");
   const [engine, setEngine] = useState<Engine>("midjourney");
+  const [modifiers, setModifiers] = useState<ModifierSelection>(
+    emptyModifierSelection
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cards, setCards] = useState<PromptCard[]>([]);
@@ -32,11 +41,17 @@ export default function HomePage() {
   useEffect(() => {
     const s = getSettings();
     setEngine(s.engine);
+    setModifiers(loadModifiers());
   }, []);
 
   function handleEngineChange(next: Engine) {
     setEngine(next);
     saveSettings({ engine: next });
+  }
+
+  function handleModifiersChange(next: ModifierSelection) {
+    setModifiers(next);
+    saveModifiers(next);
   }
 
   async function handleGenerate() {
@@ -62,6 +77,7 @@ export default function HomePage() {
         apiKey,
         conceptKo: concept.trim(),
         engine,
+        modifiers,
       });
       setCards(result);
       pushHistory({
@@ -124,6 +140,8 @@ export default function HomePage() {
           onConceptChange={setConcept}
           engine={engine}
           onEngineChange={handleEngineChange}
+          modifiers={modifiers}
+          onModifiersChange={handleModifiersChange}
           loading={loading}
           onGenerate={handleGenerate}
         />
@@ -139,6 +157,12 @@ export default function HomePage() {
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
                 타깃 엔진 · {ENGINE_LABEL[engine]}
+                {countSelected(modifiers) > 0 && (
+                  <>
+                    <span className="mx-1.5 text-muted-foreground/50">·</span>
+                    빠른 옵션 {countSelected(modifiers)}개 적용
+                  </>
+                )}
               </p>
             </div>
             {cards.length > 0 && (

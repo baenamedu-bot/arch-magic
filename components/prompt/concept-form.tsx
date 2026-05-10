@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { EngineToggle } from "./engine-toggle";
+import { ModifierChips } from "./modifier-chips";
 import type { Engine } from "@/lib/types";
+import type { ModifierSelection } from "@/lib/modifier-options";
 
 const SAMPLES = [
   "노출 콘크리트의 미니멀리즘",
@@ -20,6 +22,8 @@ interface Props {
   onConceptChange: (v: string) => void;
   engine: Engine;
   onEngineChange: (e: Engine) => void;
+  modifiers: ModifierSelection;
+  onModifiersChange: (next: ModifierSelection) => void;
   loading: boolean;
   onGenerate: () => void;
 }
@@ -29,6 +33,8 @@ export function ConceptForm({
   onConceptChange,
   engine,
   onEngineChange,
+  modifiers,
+  onModifiersChange,
   loading,
   onGenerate,
 }: Props) {
@@ -71,6 +77,12 @@ export function ConceptForm({
           ))}
         </div>
       </div>
+
+      <ModifierChips
+        value={modifiers}
+        onChange={onModifiersChange}
+        disabled={loading}
+      />
 
       <div className="space-y-2">
         <Label>타깃 엔진</Label>

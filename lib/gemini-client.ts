@@ -2,6 +2,10 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { Engine, PromptCard } from "./types";
+import {
+  resolveModifiers,
+  type ModifierSelection,
+} from "./modifier-options";
 
 const MODEL_ID = "gemini-2.5-flash";
 
@@ -104,7 +108,40 @@ export interface GenerateOptions {
   apiKey: string;
   conceptKo: string;
   engine: Engine;
+  modifiers?: ModifierSelection;
   signal?: AbortSignal;
+}
+
+function buildModifierBlock(modifiers?: ModifierSelection): string {
+  if (!modifiers) return "";
+  const list = resolveModifiers(modifiers);
+  if (list.length === 0) return "";
+
+  // Group by groupLabel for cleaner prompt
+  const byGroup: Record<string, { label: string; keyword: string }[]> = {};
+  const groupOrder: string[] = [];
+  for (const m of list) {
+    if (!byGroup[m.groupLabel]) {
+      byGroup[m.groupLabel] = [];
+      groupOrder.push(m.groupLabel);
+    }
+    byGroup[m.groupLabel].push({ label: m.label, keyword: m.keyword });
+  }
+
+  const lines: string[] = [];
+  lines.push("");
+  lines.push("추가 옵션 (반드시 5장 카드 모두에 일관되게 반영하세요):");
+  for (const groupLabel of groupOrder) {
+    const items = byGroup[groupLabel];
+    const labels = items.map((i) => i.label).join(", ");
+    const keywords = items.map((i) => i.keyword).join("; ");
+    lines.push(`- ${groupLabel} (${labels}): ${keywords}`);
+  }
+  lines.push("");
+  lines.push(
+    "주의: 위 옵션은 5장 모든 카드의 시간대·계절·렌즈·텍토닉 방향을 통일시키되, 카드의 무드(styleLabel) 다양성은 그대로 유지하세요. 영문 프롬프트 본문에 자연스럽게 녹여 넣고, 별도 메타 라벨로 나열하지 마세요."
+  );
+  return lines.join("\n");
 }
 
 export class GeminiError extends Error {
@@ -117,7 +154,7 @@ export class GeminiError extends Error {
 }
 
 export async function generatePromptCards(opts: GenerateOptions): Promise<PromptCard[]> {
-  const { apiKey, conceptKo, engine } = opts;
+  const { apiKey, conceptKo, engine, modifiers } = opts;
 
   if (!apiKey || apiKey.trim().length < 8) {
     throw new GeminiError("NO_KEY", "API 키가 설정되지 않았습니다.");
@@ -138,7 +175,8 @@ export async function generatePromptCards(opts: GenerateOptions): Promise<Prompt
     },
   });
 
-  const userPrompt = `한글 컨셉:\n"""${conceptKo.trim()}"""\n\n위 컨셉을 ${engine === "midjourney" ? "Midjourney v8.1" : "Stable Diffusion"} 용으로 5개의 카드로 확장해 주세요. 각 카드는 서로 다른 무드여야 하고, 재질·공간감·조명·카메라 4요소를 자연스럽게 포함해야 합니다. JSON만 출력하세요.`;
+  const modifierBlock = buildModifierBlock(modifiers);
+  const userPrompt = `한글 컨셉:\n"""${conceptKo.trim()}"""\n${modifierBlock}\n\n위 컨셉을 ${engine === "midjourney" ? "Midjourney v8.1" : "Stable Diffusion"} 용으로 5개의 카드로 확장해 주세요. 각 카드는 서로 다른 무드여야 하고, 재질·공간감·조명·카메라 4요소를 자연스럽게 포함해야 합니다. JSON만 출력하세요.`;
 
   let text: string;
   try {
