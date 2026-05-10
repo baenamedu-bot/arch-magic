@@ -3,6 +3,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 
 import { ApiKeyProvider } from "@/components/settings/api-key-context";
+import { FavoritesProvider } from "@/components/favorites/favorites-context";
 import { AppHeader } from "@/components/app-header";
 import { FooterCredit } from "@/components/branding/footer-credit";
 import { WelcomeModal } from "@/components/branding/welcome-modal";
@@ -49,21 +50,23 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground antialiased flex flex-col">
         <ApiKeyProvider>
-          <AppHeader />
-          <main className="flex-1">{children}</main>
-          <FooterCredit />
-          <WelcomeModal />
-          <Toaster
-            position="top-center"
-            richColors
-            closeButton
-            toastOptions={{
-              style: {
-                fontFamily:
-                  "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-              },
-            }}
-          />
+          <FavoritesProvider>
+            <AppHeader />
+            <main className="flex-1">{children}</main>
+            <FooterCredit />
+            <WelcomeModal />
+            <Toaster
+              position="top-center"
+              richColors
+              closeButton
+              toastOptions={{
+                style: {
+                  fontFamily:
+                    "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                },
+              }}
+            />
+          </FavoritesProvider>
         </ApiKeyProvider>
       </body>
     </html>

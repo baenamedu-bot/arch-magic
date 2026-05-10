@@ -11,6 +11,7 @@ interface Props {
   error: string | null;
   cards: PromptCardType[];
   engine: Engine;
+  conceptKo: string;
   onRetry: () => void;
 }
 
@@ -40,7 +41,7 @@ function SkeletonCard({ index }: { index: number }) {
   );
 }
 
-export function PromptGrid({ loading, error, cards, engine, onRetry }: Props) {
+export function PromptGrid({ loading, error, cards, engine, conceptKo, onRetry }: Props) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -78,7 +79,13 @@ export function PromptGrid({ loading, error, cards, engine, onRetry }: Props) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
       {cards.map((card, i) => (
-        <PromptCard key={card.id} card={card} index={i} engine={engine} />
+        <PromptCard
+          key={card.id}
+          card={card}
+          index={i}
+          engine={engine}
+          conceptKo={conceptKo}
+        />
       ))}
     </div>
   );

@@ -176,6 +176,7 @@ export default function HomePage() {
             error={error}
             cards={cards}
             engine={engine}
+            conceptKo={concept.trim()}
             onRetry={handleGenerate}
           />
           {(cards.length > 0 || (!loading && !error && hasResult)) && <Disclaimer />}

@@ -23,7 +23,20 @@ export interface AppSettings {
   engine: Engine;
 }
 
+export interface FavoriteEntry {
+  id: string;
+  card: PromptCard;
+  conceptKo: string;
+  engine: Engine;
+  savedAt: number;
+}
+
 export const ENGINE_LABEL: Record<Engine, string> = {
   midjourney: "Midjourney V8.1",
   "stable-diffusion": "Stable Diffusion",
+};
+
+export const ENGINE_LABEL_SHORT: Record<Engine, string> = {
+  midjourney: "MJ",
+  "stable-diffusion": "SD",
 };

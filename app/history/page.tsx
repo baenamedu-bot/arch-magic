@@ -202,6 +202,7 @@ export default function HistoryPage() {
                     card={card}
                     index={i}
                     engine={opened.engine}
+                    conceptKo={opened.conceptKo}
                   />
                 ))}
               </div>
